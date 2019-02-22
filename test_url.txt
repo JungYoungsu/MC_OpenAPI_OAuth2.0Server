@@ -1,0 +1,46 @@
+### Implicit Grant Type
+
+http://localhost:8080/oauth/authorize?response_type=token&client_id=client1&redirect_uri=http://localhost:8080/client/callback&scope=profile
+
+http://localhost:8080/client/callback#access_token=b7211eb7-33dd-4d7b-a049-560b939608cb&token_type=bearer&expires_in=43042
+
+http://localhost:8080/contacts
+HEADER
+[{"key":"Authorization","value":"Bearer b7211eb7-33dd-4d7b-a049-560b939608cb"}]
+BODY
+필요없음
+
+
+
+### Authorization Code Grant Type
+
+http://localhost:8080/oauth/authorize?response_type=code&client_id=client1&redirect_uri=http://localhost:8080/client/callback&scope=profile
+
+http://localhost:8080/client/callback?code=E366eR
+
+http://client1:1234@localhost:8080/oauth/token     // 아직 모든 페이지에 인증이 필요한 설정이므로 임시로 앞에 client_id:client_secret
+HEADER
+필요없음
+BODY
+grant_type:authorization_code
+code:E366eR
+client_id:client1
+client_secret:1234
+scope:profile
+redirect_uri:http://localhost:8080/client/callback
+
+응답
+{   "access_token": "0eca639c-a6b7-4af7-9a73-f937afcfcd4e",
+	"token_type": "bearer",
+	"refresh_token": "c69cd607-68cc-4aa1-98c2-dd0299f767d0",
+	"expires_in": 43199,
+	"scope": "profile"
+}
+
+
+http://localhost:8080/contacts
+HEADER
+[{"key":"Authorization","value":"Bearer c69cd607-68cc-4aa1-98c2-dd0299f767d0"}]
+BODY
+필요없음
+
