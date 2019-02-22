@@ -62,7 +62,7 @@ public class AuthserverApplication extends AuthorizationServerConfigurerAdapter 
 	@Override
 	public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
 		security.allowFormAuthenticationForClients();
-	}
+	} // solve 'Full authentication is required to access this resource'
 
 	public static void main(String[] args) {
 		SpringApplication.run(AuthserverApplication.class, args);
