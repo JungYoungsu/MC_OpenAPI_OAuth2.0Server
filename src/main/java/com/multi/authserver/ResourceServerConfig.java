@@ -6,12 +6,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
 import org.springframework.security.oauth2.provider.token.TokenStore;
-import org.springframework.security.oauth2.provider.token.store.JdbcTokenStore;
+import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
+import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
@@ -24,13 +27,29 @@ public class ResourceServerConfig extends ResourceServerConfigurerAdapter {
 
 	// Auth 매니저는 필요없고, 인증이 제대로 되어있는지만 확인하면 됨
 
-	public TokenStore jdbcTokenStore() {
-		return new JdbcTokenStore(dataSource);
+	@Bean
+	public JwtAccessTokenConverter accessTokenConverter() {
+		JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
+		converter.setSigningKey("SECRET KEY");
+		return converter;
+	}
+	
+	@Bean
+	public TokenStore tokenStore() {
+		return new JwtTokenStore(accessTokenConverter());
+	}
+	
+	@Bean
+	@Primary
+	public DefaultTokenServices tokenServces() {
+		DefaultTokenServices dts = new DefaultTokenServices();
+		dts.setTokenStore(tokenStore());
+		return dts;
 	}
 	
 	@Override
 	public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
-		resources.tokenStore(jdbcTokenStore());
+		resources.tokenServices(tokenServces());
 	}
 
 	@Override

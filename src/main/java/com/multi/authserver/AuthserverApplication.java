@@ -5,6 +5,7 @@ import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
@@ -16,7 +17,8 @@ import org.springframework.security.oauth2.provider.approval.InMemoryApprovalSto
 import org.springframework.security.oauth2.provider.code.AuthorizationCodeServices;
 import org.springframework.security.oauth2.provider.code.InMemoryAuthorizationCodeServices;
 import org.springframework.security.oauth2.provider.token.TokenStore;
-import org.springframework.security.oauth2.provider.token.store.JdbcTokenStore;
+import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
+import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 
 @EnableAuthorizationServer
 @SpringBootApplication
@@ -26,10 +28,18 @@ public class AuthserverApplication extends AuthorizationServerConfigurerAdapter 
 	@Autowired
 	private AuthenticationManager authManager;
 
-	public TokenStore jdbcTokenStore() {
-		return new JdbcTokenStore(dataSource);
+	@Bean
+	public JwtAccessTokenConverter accessTokenConverter() {
+		JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
+		converter.setSigningKey("SECRET KEY");
+		return converter;
 	}
-
+	
+	@Bean
+	public TokenStore tokenStore() {
+		return new JwtTokenStore(accessTokenConverter());
+	}
+	
 	// Authentication Code Grant 에 쓰임. 안쓰면 Implicit 만 가능
 	public ApprovalStore inmemoryApprovalStore() {
 		return new InMemoryApprovalStore(); // 승인은 DB 안 씀. 일시적인 것이므로
@@ -53,7 +63,8 @@ public class AuthserverApplication extends AuthorizationServerConfigurerAdapter 
 
 	@Override
 	public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
-		endpoints.tokenStore(jdbcTokenStore())
+		endpoints.tokenStore(tokenStore())
+			.accessTokenConverter(accessTokenConverter())
 			.approvalStore(inmemoryApprovalStore())
 			.authorizationCodeServices(inmemoryAuthorizationCodeServices())
 			.authenticationManager(authManager);
